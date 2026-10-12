@@ -95,11 +95,15 @@ secrets 维持 `secrets/appid.txt` + `app_secret.txt`（0600）；后续可换 1
 
 ```
 cmd/adapter/main.go        组装：qqgw→spool→serve+relay+healthz
-internal/{qqgw,spool,serve,relay,outbox,token,health}/
+internal/{qqgw,spool,serve,relay,outbox,token,health,config}/
+internal/e2e/              假 QQ 桩全链路测试
 cmd/import-jsonl/main.go   events.jsonl → sqlite（seq 连续续上）
 docs/{design,protocol,events}.md
-deploy/{plply-adapter.service,logrotate,README.md}
+deploy/{plply-adapter.service,config.example.json,README.md}
 ```
+
+落地差异：日志走 stdout→journald，无文件日志，故无 logrotate；READY/RESUMED
+进独立 `control` 表（含导入行的 orig_seq），不占业务 seq。
 
 ## 迁移与回滚
 
