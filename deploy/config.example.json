@@ -1,0 +1,13 @@
+{
+  "listen_ip": "100.85.44.30",
+  "ws_port": 8765,
+  "relay_port": 8766,
+  "db_path": "state/adapter.db",
+  "intents": 50331648,
+  "retention_days": 30,
+  "control_retention_days": 7,
+  "outbox_max_age_hours": 24,
+  "outbox_keep_days": 7,
+  "replay_batch": 500,
+  "secrets_dir": "secrets"
+}

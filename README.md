@@ -8,4 +8,4 @@ plply 上的 QQ 适配器（v2，Go）：替 muse 承担所有与 QQ 的直接�
 
 设计：[docs/design.md](docs/design.md) · 协议：[docs/protocol.md](docs/protocol.md) · 部署：[deploy/](deploy/)
 
-现状：设计阶段。线上运行的 v1（Python，/root/qqbot-adapter）继续服役，本仓达到等价功能并导入历史后灰度切换。
+现状：v2 已实现并通过假桩 e2e（重放/实时推/outbox 重试）。线上 v1（Python，/root/qqbot-adapter）继续服役，按 [deploy/README.md](deploy/README.md) 导入历史后灰度切换。

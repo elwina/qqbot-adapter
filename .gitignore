@@ -1,0 +1,6 @@
+bin/
+state/
+secrets/
+logs/
+*.exe
+config.json
