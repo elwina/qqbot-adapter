@@ -14,9 +14,9 @@ import (
 	"strconv"
 	"strings"
 
-	"qqbot-adapter/internal/health"
-	"qqbot-adapter/internal/outbox"
-	"qqbot-adapter/internal/spool"
+	"github.com/elwina/qqbot-adapter/internal/health"
+	"github.com/elwina/qqbot-adapter/internal/outbox"
+	"github.com/elwina/qqbot-adapter/internal/spool"
 )
 
 type Server struct {

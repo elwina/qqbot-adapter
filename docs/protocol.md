@@ -1,13 +1,13 @@
-# qqbot-adapter v2 协议
+# qqbot-adapter 协议
 
-面向消费端（muse）与运维。所有端口只绑 Tailscale IP，无鉴权。
+面向消费端（你的 bot 后端）与运维。建议绑内网/Tailscale IP；**无鉴权，勿进公网**。
 
 ## 事件流 `ws://<ip>:8765/events`
 
-兼容 v1：任何路径的 WS Upgrade 都接受（muse 固定连 `/events`）。
+任何路径的 WS Upgrade 都接受（约定 `/events`）。
 
 ```
-client -> {"last_seq": N, "name"?: "muse"}        # 连接后 30s 内发送
+client -> {"last_seq": N, "name"?: "my-bot"}      # 连接后 30s 内发送
 server -> {"type":"event","seq":n,"event":{...}}  # id>N 的历史重放，升序
 server -> {"type":"ready"}                        # 重放结束
 server -> {"type":"event","seq":n,"event":{...}}  # 实时推送

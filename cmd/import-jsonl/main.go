@@ -17,8 +17,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"qqbot-adapter/internal/config"
-	"qqbot-adapter/internal/spool"
+	"github.com/elwina/qqbot-adapter/internal/config"
+	"github.com/elwina/qqbot-adapter/internal/spool"
 )
 
 var controlTypes = map[string]bool{"READY": true, "RESUMED": true}

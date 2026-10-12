@@ -1,4 +1,4 @@
-module qqbot-adapter
+module github.com/elwina/qqbot-adapter
 
 go 1.26.4
 

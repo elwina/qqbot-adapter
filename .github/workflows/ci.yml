@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+
+      - name: gofmt
+        run: test -z "$(gofmt -l .)"
+
+      - name: vet
+        run: go vet ./...
+
+      - name: build
+        run: go build ./...
+
+      - name: test
+        run: go test -count=1 -timeout 90s ./internal/e2e/
+
+      - name: static binary (linux/amd64)
+        run: |
+          CGO_ENABLED=0 go build -ldflags "-X main.version=$(git describe --tags --always --dirty)" \
+            -o adapter ./cmd/adapter
+          ./adapter -version

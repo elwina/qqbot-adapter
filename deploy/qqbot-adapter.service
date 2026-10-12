@@ -1,0 +1,20 @@
+[Unit]
+Description=qqbot-adapter (QQ gateway + event spool + API relay)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Run as a dedicated user in production; keep root only if required.
+User=qqbot
+WorkingDirectory=/opt/qqbot-adapter
+ExecStart=/opt/qqbot-adapter/adapter -config config.json
+Restart=always
+RestartSec=10
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/qqbot-adapter/state
+
+[Install]
+WantedBy=multi-user.target

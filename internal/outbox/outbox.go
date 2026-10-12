@@ -12,8 +12,8 @@ import (
 	"net/http"
 	"time"
 
-	"qqbot-adapter/internal/spool"
-	"qqbot-adapter/internal/token"
+	"github.com/elwina/qqbot-adapter/internal/spool"
+	"github.com/elwina/qqbot-adapter/internal/token"
 )
 
 const (

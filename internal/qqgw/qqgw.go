@@ -20,9 +20,9 @@ import (
 
 	"nhooyr.io/websocket"
 
-	"qqbot-adapter/internal/health"
-	"qqbot-adapter/internal/spool"
-	"qqbot-adapter/internal/token"
+	"github.com/elwina/qqbot-adapter/internal/health"
+	"github.com/elwina/qqbot-adapter/internal/spool"
+	"github.com/elwina/qqbot-adapter/internal/token"
 )
 
 // Control frames are dispatches too but must not pollute business replay.
@@ -339,7 +339,7 @@ func (g *Gateway) fetchGateway(ctx context.Context) (string, int) {
 	}
 	defer resp.Body.Close()
 	var data struct {
-		URL                string `json:"url"`
+		URL               string `json:"url"`
 		SessionStartLimit struct {
 			Remaining int `json:"remaining"`
 		} `json:"session_start_limit"`

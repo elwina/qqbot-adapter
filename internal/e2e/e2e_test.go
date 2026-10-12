@@ -18,14 +18,14 @@ import (
 
 	"nhooyr.io/websocket"
 
-	"qqbot-adapter/internal/config"
-	"qqbot-adapter/internal/health"
-	"qqbot-adapter/internal/outbox"
-	"qqbot-adapter/internal/qqgw"
-	"qqbot-adapter/internal/relay"
-	"qqbot-adapter/internal/serve"
-	"qqbot-adapter/internal/spool"
-	"qqbot-adapter/internal/token"
+	"github.com/elwina/qqbot-adapter/internal/config"
+	"github.com/elwina/qqbot-adapter/internal/health"
+	"github.com/elwina/qqbot-adapter/internal/outbox"
+	"github.com/elwina/qqbot-adapter/internal/qqgw"
+	"github.com/elwina/qqbot-adapter/internal/relay"
+	"github.com/elwina/qqbot-adapter/internal/serve"
+	"github.com/elwina/qqbot-adapter/internal/spool"
+	"github.com/elwina/qqbot-adapter/internal/token"
 )
 
 // ---------- fake QQ gateway ----------
@@ -148,7 +148,7 @@ func startAdapter(t *testing.T, apiBase, gwURL string) (wsPort, relayPort int, s
 		ListenIP: "127.0.0.1", DBPath: dir + "/state/adapter.db",
 		SecretsDir: dir + "/secrets", Intents: 50331648,
 		ReplayBatch: 2, // force multi-batch replay
-		QQAPIBase: apiBase, GatewayURL: gwURL,
+		QQAPIBase:   apiBase, GatewayURL: gwURL,
 	}
 	writeSecrets(t, cfg.SecretsDir)
 	os.MkdirAll(filepath.Dir(cfg.DBPath), 0o755)
@@ -247,7 +247,7 @@ func TestEndToEnd(t *testing.T) {
 	}
 
 	// Consumer connects: replay 3 events then ready.
-	cli := dial(t, fmt.Sprintf("ws://127.0.0.1:%d/events", wsPort), `{"last_seq":0,"name":"test-muse"}`)
+	cli := dial(t, fmt.Sprintf("ws://127.0.0.1:%d/events", wsPort), `{"last_seq":0,"name":"test-consumer"}`)
 	got := 0
 	for {
 		m := cli.next()

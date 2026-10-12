@@ -14,19 +14,27 @@ import (
 	"syscall"
 	"time"
 
-	"qqbot-adapter/internal/config"
-	"qqbot-adapter/internal/health"
-	"qqbot-adapter/internal/outbox"
-	"qqbot-adapter/internal/qqgw"
-	"qqbot-adapter/internal/relay"
-	"qqbot-adapter/internal/serve"
-	"qqbot-adapter/internal/spool"
-	"qqbot-adapter/internal/token"
+	"github.com/elwina/qqbot-adapter/internal/config"
+	"github.com/elwina/qqbot-adapter/internal/health"
+	"github.com/elwina/qqbot-adapter/internal/outbox"
+	"github.com/elwina/qqbot-adapter/internal/qqgw"
+	"github.com/elwina/qqbot-adapter/internal/relay"
+	"github.com/elwina/qqbot-adapter/internal/serve"
+	"github.com/elwina/qqbot-adapter/internal/spool"
+	"github.com/elwina/qqbot-adapter/internal/token"
 )
+
+// version is overridable at release time: -ldflags "-X main.version=x.y.z"
+var version = "dev"
 
 func main() {
 	cfgPath := flag.String("config", "config.json", "config file path")
+	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
+	if *showVersion {
+		fmt.Println("qqbot-adapter", version)
+		return
+	}
 
 	cfg, err := config.Load(*cfgPath)
 	if err != nil {

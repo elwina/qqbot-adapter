@@ -1,7 +1,7 @@
 # qqbot-adapter 开发约定
 
-Go + SQLite（modernc，纯 Go 免 cgo）重构 plply QQ 适配器。设计与协议先读
-`docs/design.md` 和 `docs/protocol.md`。
+Go + SQLite（modernc，纯 Go 免 cgo）的 QQ 机器人适配器：QQ 事件的持久化
+转发 + QQ API 的鉴权中转。设计与协议先读 `docs/design.md` 和 `docs/protocol.md`。
 
 ## 构建 / 测试
 
@@ -27,7 +27,7 @@ GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o adapter ./cmd/adapter   # 部�
 - 出向：`/v2/*` 5xx/网络错 → 202 落 outbox 重试；4xx/2xx 透传并记 sent
 - 凭证只读 `secrets/*.txt`（0600），token/secret 绝不写日志（v1 有 _mask 过滤器，v2 不打印请求头即可）
 
-## 目标环境
+## 部署形态
 
-plply（Tailscale 100.85.44.30），v1 在 `/root/qqbot-adapter` 服役中；
-v2 部署目录 `/root/qqbot-adapter-v2`，切换步骤见 `deploy/README.md`。
+单二进制 + config.json + secrets/（0600）。部署步骤见 `deploy/README.md`；
+只绑内网/Tailscale IP，无鉴权，勿暴露公网。

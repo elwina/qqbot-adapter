@@ -16,9 +16,9 @@ import (
 
 	"nhooyr.io/websocket"
 
-	"qqbot-adapter/internal/config"
-	"qqbot-adapter/internal/health"
-	"qqbot-adapter/internal/spool"
+	"github.com/elwina/qqbot-adapter/internal/config"
+	"github.com/elwina/qqbot-adapter/internal/health"
+	"github.com/elwina/qqbot-adapter/internal/spool"
 )
 
 type Server struct {

@@ -1,5 +1,5 @@
 {
-  "listen_ip": "100.85.44.30",
+  "listen_ip": "<tailscale-ip>",
   "ws_port": 8765,
   "relay_port": 8766,
   "db_path": "state/adapter.db",

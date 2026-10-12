@@ -1,12 +1,12 @@
 # qqbot-adapter v2 设计
 
-日期：2026-10-12。目标：把 plply 上的 Python 适配器（777 行，无 git、events.jsonl 无界增长）重构成 Go 单二进制产品。
+日期：2026-10-12。目标：把线上运行的 Python 适配器（777 行，无 git、events.jsonl 无界增长）重构成 Go 单二进制产品。
 
 ## 定位与边界
 
-- **只做两件事**：QQ 事件的持久化转发；QQ API 的鉴权中转。muse（消费端，tailnet 节点）零改动——WS 协议与 relay 路径保持兼容。
-- 只绑 Tailscale IP（100.85.44.30:8765/8766），无鉴权、不进公网；hello 协议预留扩展位。
-- QQ 直连、access_token、AppSecret 全部收敛在 plply；muse 不持有 secret。
+- **只做两件事**：QQ 事件的持久化转发；QQ API 的鉴权中转。消费端（tailnet 节点）零改动——WS 协议与 relay 路径保持兼容。
+- 只绑 Tailscale IP（部署机的 tailnet IP:8765/8766），无鉴权、不进公网；hello 协议预留扩展位。
+- QQ 直连、access_token、AppSecret 全部收敛在适配器宿主机；消费端不持有 secret。
 
 ## 技术选型
 
@@ -56,7 +56,7 @@ consumers(name TEXT PRIMARY KEY,               -- hello 可选 name
 
 ## 出向语义（v1 没有，本版核心新增）
 
-需求来源：muse 发消息可能遇到 QQ API 断连/超时，需要**落盘重试**而不是丢失。
+需求来源：消费端发消息可能遇到 QQ API 断连/超时，需要**落盘重试**而不是丢失。
 
 - `ANY /v2/*` 先同步尝试：成功 → 返回 QQ 响应 + `outbox.status=sent`（含 resp_body 审计）
 - 网络错误 / 5xx → 入队 `status=queued`，返回 `202 {outbox_id}`；后台 worker 指数退避重试（5s→5min 封顶），超过 `outbox_max_age`（默认 24h）标 `failed`
@@ -68,9 +68,9 @@ consumers(name TEXT PRIMARY KEY,               -- hello 可选 name
 - 已订阅 intent `1<<24 | 1<<25`（群成员/入群申请 + 群聊/单聊消息），8 天 12,681 行事件零丢损；频道系与交互回调未订阅（需要时在 QQ 开放平台开 + 配置加 intent）
 - 补齐缺口：出向落 outbox 后，收发两侧都有持久记录
 
-## 兼容协议（muse 零改动）
+## 兼容协议（消费端零改动）
 
-- client → `{"last_seq": N, "name"?: "muse"}`（name 为新增可选位点登记，老客户端不带也照常）
+- client → `{"last_seq": N, "name"?: "my-bot"}`（name 为新增可选位点登记，老客户端不带也照常）
 - server → `{"type":"event","seq":n,"event":{recv_ts,op,t,s,d}}` ×N → `{"type":"ready"}` → 实时推送；空闲 45s `{"type":"ping"}`
 - 断线后按 sqlite `id > last_seq` 重放；seq 与行号解耦，可安全做保留窗口
 
@@ -78,7 +78,7 @@ consumers(name TEXT PRIMARY KEY,               -- hello 可选 name
 
 ```json
 {
-  "listen_ip": "100.85.44.30",
+  "listen_ip": "<tailscale-ip>",
   "ws_port": 8765,
   "relay_port": 8766,
   "db_path": "state/adapter.db",
@@ -99,7 +99,7 @@ internal/{qqgw,spool,serve,relay,outbox,token,health,config}/
 internal/e2e/              假 QQ 桩全链路测试
 cmd/import-jsonl/main.go   events.jsonl → sqlite（seq 连续续上）
 docs/{design,protocol,events}.md
-deploy/{plply-adapter.service,config.example.json,README.md}
+deploy/{qqbot-adapter.service,config.example.json,README.md}
 ```
 
 落地差异：日志走 stdout→journald，无文件日志，故无 logrotate；READY/RESUMED
@@ -109,12 +109,12 @@ deploy/{plply-adapter.service,config.example.json,README.md}
 
 1. 本机假 QQ 桩（hello/identify/dispatch/heartbeat）+ 假 API 自测：重放顺序、resume、outbox 重试
 2. `import-jsonl` 把 12,681 行灌库，seq 无缝续接
-3. plply 上 `systemctl stop plply-adapter` → 换 Go 二进制 → 同端口启动 → muse 自然重连重放
+3. 部署机上 `systemctl stop <v1>` → 换 Go 二进制 → 同端口启动 → 消费端自然重连重放
 4. 回滚：旧 venv 与文件保留一版本，systemd 切回原 ExecStart
 
 ## 验收
 
-- events 表持续增长、`seq` 与 muse `last_seq` 重放一致；READY/RESUMED 不再污染业务重放
+- events 表持续增长、`seq` 与消费端 `last_seq` 重放一致；READY/RESUMED 不再污染业务重放
 - 手动断 QQ 模拟 5xx：POST /v2 → 202，恢复后 outbox 自动 sent
 - `/healthz` 返回 online/session/subs/last_event_ts；`?since=` HTTP 重放与 WS 一致
 - RSS 目标 <30MB；单二进制无 venv
