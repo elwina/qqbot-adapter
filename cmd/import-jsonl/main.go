@@ -126,7 +126,12 @@ func main() {
 	if err := tx.Commit(); err != nil {
 		log.Fatalf("commit: %v", err)
 	}
+	// v1 行号全部被消费过（含 control 行）——钉住 seq 下限，禁止复用，
+	// 否则新事件领到旧 last_seq 会被消费端的 seq<=last_seq 过滤掉。
+	if err := sp.PinEventSeqFloor(lineNo); err != nil {
+		log.Fatalf("钉 seq 下限失败: %v", err)
+	}
 	last, _ := sp.LastSeq()
-	fmt.Printf("导入完成：lines=%d events=%d control=%d skipped=%d max_seq=%d\n",
-		lineNo, imported, controlRows, skipped, last)
+	fmt.Printf("导入完成：lines=%d events=%d control=%d skipped=%d max_seq=%d 下一条=%d\n",
+		lineNo, imported, controlRows, skipped, last, lineNo+1)
 }

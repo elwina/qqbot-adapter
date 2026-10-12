@@ -18,7 +18,7 @@ import (
 
 const schema = `
 CREATE TABLE IF NOT EXISTS events(
-  id      INTEGER PRIMARY KEY,
+  id      INTEGER PRIMARY KEY AUTOINCREMENT, -- 永不复用：导入控制帧/retention 都不许挤占消费端位点
   recv_ts INTEGER NOT NULL,
   op      INTEGER NOT NULL,
   t       TEXT    NOT NULL,
@@ -190,6 +190,19 @@ func (s *Spool) LastSeq() (int64, error) {
 	var v sql.NullInt64
 	err := s.db.QueryRow(`SELECT MAX(id) FROM events`).Scan(&v)
 	return v.Int64, err
+}
+
+// PinEventSeqFloor raises the events id floor to n so the next row gets id>n.
+// Needed after jsonl import: control lines didn't land in events, leaving the
+// last line number free for reuse — which collides with consumers' last_seq.
+func (s *Spool) PinEventSeqFloor(n int64) error {
+	if _, err := s.db.Exec(
+		`INSERT INTO sqlite_sequence(name,seq)
+		 SELECT 'events', ? WHERE NOT EXISTS(SELECT 1 FROM sqlite_sequence WHERE name='events')`, n); err != nil {
+		return err
+	}
+	_, err := s.db.Exec(`UPDATE sqlite_sequence SET seq=? WHERE name='events' AND seq<?`, n, n)
+	return err
 }
 
 // PruneEvents deletes business events older than beforeMs.
