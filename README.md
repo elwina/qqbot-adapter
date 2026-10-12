@@ -81,7 +81,8 @@ Relay port `relay_port` (default 8766) — for API calls:
 | `GET /healthz` | same health snapshot |
 
 Wire details: [docs/protocol.md](docs/protocol.md) · subscribed event types:
-[docs/events.md](docs/events.md) · design rationale: [docs/design.md](docs/design.md)（中文）
+[docs/events.md](docs/events.md) · **writing a consumer**: [docs/consuming.md](docs/consuming.md)
+· design rationale: [docs/design.md](docs/design.md)（中文）
 
 ## Configuration / 配置
 
