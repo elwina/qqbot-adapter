@@ -14,6 +14,14 @@ server -> {"type":"event","seq":n,"event":{...}}  # 实时推送
 server -> {"type":"ping"}                         # 45s 无事件时
 ```
 
+`last_seq` 取值语义：
+
+| 值 | 行为 |
+|---|---|
+| `N > 0` | 重放所有 `seq > N` 的留存事件 |
+| `0` 或缺省 | **全量重放**：从头推完 retention 内的全部历史（最多 retention_days 天）|
+| `< 0`（如 `-1`） | 不重放，直接 `ready` 只收新事件——新消费端首连推荐 |
+
 `event` 对象与 v1 jsonl 行同构：
 
 ```json
@@ -22,8 +30,10 @@ server -> {"type":"ping"}                         # 45s 无事件时
 
 - `recv_ts` 为浮点**秒**（v1 兼容；库内按毫秒存）
 - READY/RESUMED 不进入事件流（v2 起存 control 表单独审计）
-- seq 只保证单调递增，不保证连续（导入期控制帧占了号）
-- 消费端积压超过 1024 条未读会被断开，按 `last_seq` 重连重放即可
+- seq 只保证**单调递增，不保证连续**（控制帧、导入空洞都会占号）；
+  不要用 `seq+1 == 下一条` 做完整性校验，正确校验是 `seq` 严格递增且重连后无缺口
+- 消费端积压超过 1024 条未读时，服务端丢弃该订阅并断开连接——**丢的是订阅通道，
+  不是数据**：事件仍在 SQLite，带 `last_seq` 重连即可补齐到断开点（retention 内无损）
 
 `name` 为可选登记位：带上后服务端在 `consumers` 表记录 `last_ack`（最近送达 seq）。
 
@@ -47,6 +57,10 @@ ANY /v2/*  ->  {qq_api_base}/v2/*   （自动加 Authorization: QQBot <token>）
 - `GET /v1/outbox/{id}`：`{id, status, attempts, resp_status, resp_body, last_error, ...}`
 
 QQ 被动消息窗口短的实时回复走 sync 路径；outbox 兜非实时通知。
+
+**投递语义是 at-least-once**：5xx 可能意味着"QQ 已受理但响应丢失"，此时重试会在群里
+发出重复消息。QQ 开放平台没有幂等键可传，适配器无法保证 at-most-once——怕重复的调用方
+应在业务层自带去重手段（如内容 hash / 幂等标记落自己库），或接受极低概率的重复。
 
 ## QQ 网关（出向，消费端不感知）
 

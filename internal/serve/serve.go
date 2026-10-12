@@ -118,10 +118,18 @@ func (s *Server) serveConn(ws *websocket.Conn, r *http.Request) {
 	ch := s.spool.Subscribe()
 	defer s.spool.Unsubscribe(ch)
 	s.spool.TouchConsumer(hello.Name, hello.LastSeq)
-	log.Printf("[serve] 订阅 last_seq=%d name=%q remote=%s", hello.LastSeq, hello.Name, r.RemoteAddr)
 
-	// replay
-	var lastSeq = hello.LastSeq
+	// last_seq: N = replay id>N;  0/缺省 = 全量重放（v1 兼容）;  <0 = 从当前开始只收新事件
+	lastSeq := hello.LastSeq
+	if lastSeq < 0 {
+		if cur, err := s.spool.LastSeq(); err == nil {
+			lastSeq = cur
+		} else {
+			lastSeq = 0
+		}
+	}
+	log.Printf("[serve] 订阅 last_seq=%d（生效 %d）name=%q remote=%s",
+		hello.LastSeq, lastSeq, hello.Name, r.RemoteAddr)
 	for {
 		evs, err := s.spool.ReadSince(lastSeq, s.batch)
 		if err != nil {

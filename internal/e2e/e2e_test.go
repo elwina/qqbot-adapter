@@ -266,6 +266,13 @@ READY:
 		t.Fatalf("replay 条数=%d, want 3", got)
 	}
 
+	// last_seq=-1: skip history, first frame must be ready.
+	cli2 := dial(t, fmt.Sprintf("ws://127.0.0.1:%d/events", wsPort), `{"last_seq":-1,"name":"late"}`)
+	if m := cli2.next(); m["type"] != "ready" {
+		t.Fatalf("last_seq=-1 首帧 type=%v, want ready", m["type"])
+	}
+	cli2.c.CloseNow()
+
 	// Live push: fake gateway dispatches -> consumer sees event.
 	fg.dispatch <- frame{T: "GROUP_MESSAGE_CREATE", D: json.RawMessage(`{"live":1}`)}
 	deadline := time.Now().Add(15 * time.Second)
