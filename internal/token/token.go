@@ -115,8 +115,8 @@ func (p *Provider) request() (string, time.Duration, error) {
 	}
 	defer resp.Body.Close()
 	var data struct {
-		AccessToken string `json:"access_token"`
-		ExpiresIn   int64  `json:"expires_in"`
+		AccessToken string      `json:"access_token"`
+		ExpiresIn   json.Number `json:"expires_in"` // QQ 实测返回字符串 "7200"
 	}
 	if resp.StatusCode/100 != 2 {
 		return "", 0, fmt.Errorf("取 token 接口 HTTP %d", resp.StatusCode)
@@ -127,8 +127,9 @@ func (p *Provider) request() (string, time.Duration, error) {
 	if data.AccessToken == "" {
 		return "", 0, fmt.Errorf("取 token 返回中无 access_token")
 	}
-	if data.ExpiresIn <= 0 {
-		data.ExpiresIn = 7200
+	expiresIn, err := data.ExpiresIn.Int64()
+	if err != nil || expiresIn <= 0 {
+		expiresIn = 7200
 	}
-	return data.AccessToken, time.Duration(data.ExpiresIn) * time.Second, nil
+	return data.AccessToken, time.Duration(expiresIn) * time.Second, nil
 }
